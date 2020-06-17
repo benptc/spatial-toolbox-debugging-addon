@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Software Interface</title>
+    <style>
+        #currentValue {
+            width: 100px;
+        }
+    </style>
+    <!-- This is automatically exposed by the server hosted in softwareInterface/index.js -->
+    <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+
+<div id="container">
+    <div>
+        Current Value: <input type="number" min="0" max="1" step="0.1"
+                              id="currentValue" value="0.00">
+    </div>
+    <input type="button" value="Submit" id="submitButton">
+</div>
+
+<script>
+    let currentValue = 0;
+    let socket = io(); // connects to socket.io in the hardware interface index.js
+
+    let currentValueField = document.getElementById('currentValue');
+    let submitButton = document.getElementById('submitButton');
+    
+    // receive value from edge server
+    socket.on('newValueFromEdgeServer', function(e) {
+        console.log('received new value', e);
+        onNewValue(e);
+    });
+
+    // write value to text field
+    function onNewValue(e) {
+        currentValue = e.value || 0;
+        currentValueField.value = currentValue.toFixed(2);
+    }
+    
+    // send value to edge server
+    submitButton.addEventListener('click', function(e) {
+        currentValue = parseFloat(currentValueField.value) || 0;
+        console.log('send new value', currentValue);
+        socket.emit('newValueFromExternalSystem', {value: currentValue});
+    });
+</script>
+</body>
+</html>
